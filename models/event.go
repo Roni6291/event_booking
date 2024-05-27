@@ -29,12 +29,49 @@ func (e Event) Save(db *sql.DB) error {
 		return err
 	}
 	defer cur.Close()
-	result, err := cur.Exec(e.Name, e.Description, e.Location, e.Time, e.UserId)
+	result, err := cur.Exec(
+		e.Name,
+		e.Description,
+		e.Location,
+		e.Time,
+		e.UserId,
+	)
 	if err != nil {
 		return err
 	}
 	_, err = result.LastInsertId()
 	// e.Id = id
+	return err
+}
+
+func (e *Event) Update(db *sql.DB) error {
+	query := `UPDATE events
+		SET name = ?, description = ?, location = ?, time = ?
+		WHERE id = ?
+	`
+	cur, err := db.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer cur.Close()
+	_, err = cur.Exec(
+		e.Name,
+		e.Description,
+		e.Location,
+		e.Time,
+		e.Id,
+	)
+	return err
+}
+
+func (e *Event) Delete(db *sql.DB) error {
+	query := "DELETE FROM events WHERE id = ?"
+	cur, err := db.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer cur.Close()
+	_, err = cur.Exec(e.Id)
 	return err
 }
 
