@@ -11,7 +11,7 @@ type Event struct {
 	Description string    `binding:"required"`
 	Location    string    `binding:"required"`
 	Time        time.Time `binding:"required"`
-	UserId      string
+	UserId      int64
 }
 
 func (e Event) Save(db *sql.DB) error {

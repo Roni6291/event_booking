@@ -65,16 +65,16 @@ func createEvent(db *sql.DB) gin.HandlerFunc {
 		if err != nil {
 			context.JSON(
 				http.StatusBadRequest,
-				gin.H{"message": err.Error()},
+				gin.H{"message": "Couldn't parse request data"},
 			)
 			return
 		}
-		event.UserId = "roabrah"
+		event.UserId = 1
 		err = event.Save(db)
 		if err != nil {
 			context.JSON(
 				http.StatusInternalServerError,
-				gin.H{"message": err.Error()},
+				gin.H{"message": "Couldn't save the user in DB"},
 			)
 			return
 		}
