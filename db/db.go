@@ -6,7 +6,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDB(dbName string, maxOpenConns int, maxIdleConns int) {
+func InitDB(dbName string, maxOpenConns int, maxIdleConns int) *sql.DB {
 	DB, err := sql.Open("sqlite3", dbName)
 
 	if err != nil {
@@ -17,6 +17,7 @@ func InitDB(dbName string, maxOpenConns int, maxIdleConns int) {
 	DB.SetMaxIdleConns(maxIdleConns)
 
 	createTables(DB)
+	return DB
 }
 
 func createTables(db *sql.DB) {

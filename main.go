@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/Roni6291/event_booking/db"
@@ -8,42 +9,64 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getEvents(context *gin.Context) {
-	events := models.GetAllEvents()
-	context.JSON(http.StatusOK, events)
+func getEvents(db *sql.DB) gin.HandlerFunc {
+
+	fn := func(context *gin.Context) {
+		events, err := models.GetAllEvents(db)
+		if err != nil {
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"message": err.Error()},
+			)
+			return
+		}
+		context.JSON(http.StatusOK, events)
+	}
+	return gin.HandlerFunc(fn)
+
 }
 
-func createEvent(context *gin.Context) {
-	var event models.Event
-	err := context.ShouldBindJSON(&event)
+func createEvent(db *sql.DB) gin.HandlerFunc {
 
-	if err != nil {
-		// do something
+	fn := func(context *gin.Context) {
+		var event models.Event
+		err := context.ShouldBindJSON(&event)
+
+		if err != nil {
+			context.JSON(
+				http.StatusBadRequest,
+				gin.H{"message": err.Error()},
+			)
+			return
+		}
+		event.UserId = "roabrah"
+		err = event.Save(db)
+		if err != nil {
+			context.JSON(
+				http.StatusInternalServerError,
+				gin.H{"message": err.Error()},
+			)
+			return
+		}
+
 		context.JSON(
-			http.StatusBadRequest,
-			gin.H{"message": err.Error()},
+			http.StatusCreated,
+			gin.H{
+				"message": "Event Created Successfully",
+				"event":   event,
+			},
 		)
-		return
 	}
-	event.Id = 1
-	event.UserId = "roabrah"
-	event.Save()
+	return gin.HandlerFunc(fn)
 
-	context.JSON(
-		http.StatusCreated,
-		gin.H{
-			"message": "Event Created Successfully",
-			"event":   event,
-		},
-	)
 }
 
 func main() {
-	db.InitDB("events.db", 5, 2)
+	DB := db.InitDB("events.db", 5, 2)
 
 	server := gin.Default()
 
-	server.GET("/events", getEvents)
-	server.POST("/events", createEvent)
+	server.GET("/events", getEvents(DB))
+	server.POST("/events", createEvent(DB))
 	server.Run(":9090")
 }

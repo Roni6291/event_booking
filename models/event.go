@@ -1,9 +1,12 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Event struct {
-	Id          int
+	Id          int64
 	Name        string    `binding:"required"`
 	Description string    `binding:"required"`
 	Location    string    `binding:"required"`
@@ -11,13 +14,53 @@ type Event struct {
 	UserId      string
 }
 
-var events = []Event{}
-
-func (e Event) Save() {
-	//TODO: add to database
-	events = append(events, e)
+func (e Event) Save(db *sql.DB) error {
+	query := `INSERT INTO events(
+		name, 
+		description, 
+		location, 
+		time, 
+		user_id
+	  ) 
+	  VALUES 
+		(?, ?, ?, ?, ?)`
+	cur, err := db.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer cur.Close()
+	result, err := cur.Exec(e.Name, e.Description, e.Location, e.Time, e.UserId)
+	if err != nil {
+		return err
+	}
+	_, err = result.LastInsertId()
+	// e.Id = id
+	return err
 }
 
-func GetAllEvents() []Event {
-	return events
+func GetAllEvents(db *sql.DB) ([]Event, error) {
+	query := "SELECT * FROM events"
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var events []Event
+	for rows.Next() {
+		var event Event
+		err := rows.Scan(
+			&event.Id,
+			&event.Name,
+			&event.Description,
+			&event.Location,
+			&event.Time,
+			&event.UserId)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, nil
 }
