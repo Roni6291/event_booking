@@ -13,6 +13,7 @@ func RegisterRoutes(router *gin.Engine, db *sql.DB) {
 	// POST routes
 	router.POST("/events", createEvent(db))
 	router.POST("/signup", signUp(db))
+	router.POST("/login", login(db))
 	// PUT routes
 	router.PUT("/events/:eventId", updateEvent(db))
 	// DELETE routes

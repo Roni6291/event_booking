@@ -59,6 +59,16 @@ func getEvents(db *sql.DB) gin.HandlerFunc {
 func createEvent(db *sql.DB) gin.HandlerFunc {
 
 	fn := func(context *gin.Context) {
+
+		token := context.Request.Header.Get("Authorization")
+		if token == "" {
+			context.JSON(
+				http.StatusUnauthorized,
+				gin.H{"message": "Not Authorized"},
+			)
+			return
+		}
+
 		var event models.Event
 		err := context.ShouldBindJSON(&event)
 

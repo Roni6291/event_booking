@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/Roni6291/event_booking/utils"
 )
@@ -42,4 +43,22 @@ func (u *User) Save(db *sql.DB) error {
 	_, err = result.LastInsertId()
 	// u.Id = id
 	return err
+}
+
+func (u *User) Validate(db *sql.DB) error {
+	query := `SELECT id, password FROM users WHERE name = ?`
+	row := db.QueryRow(query, u.Name)
+
+	var retrievedPwd string
+	err := row.Scan(&u.Id, &retrievedPwd)
+	if err != nil {
+		return err
+	}
+
+	pwdIsValid := utils.CheckPassword(u.Password, retrievedPwd)
+
+	if !pwdIsValid {
+		return errors.New("credentials (pwd) invalid")
+	}
+	return nil
 }
